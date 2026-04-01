@@ -1,4 +1,13 @@
 <h1>リクエスト作成</h1>
+
+<% if @post.errors.any? %>
+    <ul>
+        <% @post.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+        <% end %>
+    </ul>
+<% end %>
+
 <%= form_with model: @request, local: true do |f| %>
   <div>
     <%= f.label :title, "タイトル" %><br>

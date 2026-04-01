@@ -67,3 +67,10 @@ group :test do
 end
 
 gem "devise", "~> 5.0"
+
+# devise-i18n
+gem "devise-i18n"
+
+# rails-i18n
+# バージョンに合わせる
+gem "rails-i18n", "~> 7.0.10"
