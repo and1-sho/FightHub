@@ -69,6 +69,30 @@ docker compose down
 docker compose run --rm web bundle install
 ```
 
+## 開発用サンプルデータ
+
+- member 3人
+- coach 3人
+- request 5件
+- advice 3件（2件の request は未返信の状態）
+
+### テストアカウント
+
+共通パスワード: `password123`
+
+- member1@example.test（テストメンバー1）
+- member2@example.test（テストメンバー2）
+- member3@example.test（テストメンバー3）
+- coach1@example.test（テストコーチ1）
+- coach2@example.test（テストコーチ2）
+- coach3@example.test（テストコーチ3）
+
+### シード投入
+
+- ローカルで実行: `bin/rails db:seed`
+- Docker で実行（起動中）: `docker compose exec web bin/rails db:seed`
+- Docker で実行（停止中）: `docker compose run --rm web bin/rails db:seed`
+
 
 
 ## ライセンス
