@@ -2,13 +2,9 @@ Rails.application.routes.draw do
   get 'home/index'
   get 'advices/new'
   get 'advices/create'
-  get 'requests/index'
-  get 'requests/show'
-  get 'requests/new'
-  get 'requests/create'
   devise_for :users
 
-  resources :requests, only:[:index, :show, :new, :create] do
+  resources :requests, only:[:index, :show, :new, :create, :edit, :update, :destroy] do
     resource :advice, only:[:new, :create]
   end
 
