@@ -15,7 +15,11 @@ class RequestsController < ApplicationController
     if current_user.member?
       @requests = current_user.requests
     elsif current_user.coach?
-      @requests = Request.all
+      if params[:filter] == "advised_by_me"
+        @requests = Request.joins(:advice).where(advices: { user_id: current_user.id })
+      else
+        @requests = Request.all
+      end
     end
   end
 

@@ -18,6 +18,14 @@
       <%= link_to "新規リクエストを作成する", new_request_path, class: "menu-btn menu-btn--primary" %>
     </div>
   <% end %>
+  <% if current_user.coach? %>
+    <div class="requests-actions">
+      <%= link_to "すべて", requests_path,
+            class: "menu-btn #{params[:filter] == "advised_by_me" ? "menu-btn--ghost" : "menu-btn--primary"}" %>
+      <%= link_to "自分がアドバイスしたもの", requests_path(filter: "advised_by_me"),
+            class: "menu-btn #{params[:filter] == "advised_by_me" ? "menu-btn--primary" : "menu-btn--ghost"}" %>
+    </div>
+  <% end %>
 
   <% if @requests.any? %>
     <div class="requests-list">
