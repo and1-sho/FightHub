@@ -460,6 +460,14 @@
   margin-bottom: 0;
 }
 
+.request-show__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+
 .request-show__advice {
   padding: 24px 0 8px;
 }

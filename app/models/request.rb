@@ -7,6 +7,6 @@ class Request < ApplicationRecord
 
   # requestはユーザーに属する
   belongs_to :user
-  # requestは一つのadviceを持つ
-  has_one :advice
+  # requestは一つのadviceを持つ（相談削除時はアドバイスも消す）
+  has_one :advice, dependent: :destroy
 end

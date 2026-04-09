@@ -27,6 +27,14 @@
       <div class="request-show__body">
         <%= simple_format(@request.body) %>
       </div>
+
+      <% if current_user.member? && @request.user_id == current_user.id %>
+        <div class="request-show__actions">
+          <%= link_to "編集", edit_request_path(@request), class: "menu-btn menu-btn--ghost" %>
+          <%= link_to "削除", request_path(@request), class: "menu-btn menu-btn--ghost",
+                data: { turbo_method: :delete, turbo_confirm: "この相談を削除しますか？" } %>
+        </div>
+      <% end %>
     </article>
 
     <section class="request-show__advice" aria-labelledby="advice-heading">
