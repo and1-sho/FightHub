@@ -6,6 +6,8 @@ Rails.application.routes.draw do
 
   # コーチプロフィール（公開ページ）
   resources :coaches, only: [:show, :edit, :update], param: :slug
+  # メンバープロフィール
+  resources :members, only: [:show, :edit, :update], param: :slug
 
   resources :requests, only:[:index, :show, :new, :create, :edit, :update, :destroy] do
     resource :advice, only: [:new, :create, :edit, :update, :destroy]

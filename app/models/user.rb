@@ -11,7 +11,7 @@ class User < ApplicationRecord
   before_validation :assign_slug, on: :create
 
   enum role: { member: 0, coach: 1 }
-  # 地域（都道府県）は入力候補を固定して表記ゆれを防ぐ
+  # 地域（都道府県）は入力候補を固定
   PREFECTURES = %w[
     北海道 青森県 岩手県 宮城県 秋田県 山形県 福島県
     茨城県 栃木県 群馬県 埼玉県 千葉県 東京都 神奈川県
@@ -22,6 +22,26 @@ class User < ApplicationRecord
     徳島県 香川県 愛媛県 高知県
     福岡県 佐賀県 長崎県 熊本県 大分県 宮崎県 鹿児島県 沖縄県
   ].freeze
+  STANCES = ["オーソドックス", "サウスポー", "スイッチ"].freeze
+  WEIGHT_CLASSES = [
+    "ミニマム級（〜47.62kg）",
+    "ライトフライ級（47.63〜48.97kg）",
+    "フライ級（48.98〜50.80kg）",
+    "スーパーフライ級（50.81〜52.16kg）",
+    "バンタム級（52.17〜53.52kg）",
+    "スーパーバンタム級（53.53〜55.34kg）",
+    "フェザー級（55.35〜57.15kg）",
+    "スーパーフェザー級（57.16〜58.97kg）",
+    "ライト級（58.98〜61.23kg）",
+    "スーパーライト級（61.24〜63.50kg）",
+    "ウェルター級（63.51〜66.68kg）",
+    "スーパーウェルター級（66.69〜69.85kg）",
+    "ミドル級（69.86〜72.57kg）",
+    "スーパーミドル級（72.58〜76.20kg）",
+    "ライトヘビー級（76.21〜79.38kg）",
+    "クルーザー級（79.39〜90.72kg）",
+    "ヘビー級（90.73kg〜）"
+  ].freeze
 
   # ユーザーの名前を必須項目にする
   validates :name, presence: true
@@ -30,6 +50,8 @@ class User < ApplicationRecord
   # URL 用 slug は重複不可（未入力時は自動生成）
   validates :slug, uniqueness: true, allow_blank: true
   validates :profile_prefecture, inclusion: { in: PREFECTURES }, allow_blank: true
+  validates :stance, inclusion: { in: STANCES }, allow_blank: true
+  validates :weight_class, inclusion: { in: WEIGHT_CLASSES }, allow_blank: true
 
   # レーダーは各軸 0〜5 の整数
   with_options numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 5 } do
@@ -64,6 +86,43 @@ class User < ApplicationRecord
     experience_label_from(coaching_started_on)
   end
 
+  # 誕生日から年齢を計算して表示用文字列を返す
+  def age_label
+    return "未設定" if birth_date.blank?
+
+    today = Date.current
+    age = today.year - birth_date.year
+    # うるう年生まれは平年時に 2/28 を誕生日扱いにする
+    birthday_day = [birth_date.day, Date.civil(today.year, birth_date.month, -1).day].min
+    birthday_this_year = Date.new(today.year, birth_date.month, birthday_day)
+    age -= 1 if today < birthday_this_year
+
+    "#{age}歳"
+  end
+
+  # コーチプロフィールの最低入力が埋まっているか
+  def coach_profile_completed?
+    return false unless coach?
+
+    profile_affiliation.present? &&
+      profile_prefecture.present? &&
+      coaching_started_on.present? &&
+      profile_bio.present?
+  end
+
+  # メンバープロフィールの最低入力が埋まっているか
+  def member_profile_completed?
+    return false unless member?
+
+    profile_affiliation.present? &&
+      profile_prefecture.present? &&
+      boxing_started_on.present? &&
+      birth_date.present? &&
+      stance.present? &&
+      weight_class.present? &&
+      profile_bio.present?
+  end
+
   # 「1分未満前」ではなく最小でも「1分前」にする
   def last_seen_label
     return "未記録" if last_seen_at.blank?
@@ -95,8 +154,9 @@ class User < ApplicationRecord
   def assign_slug
     return if slug.present?
 
-    # 英数字の URL 文字列を作る。日本語名のみでも coach-2 のように採番可
-    base = name.to_s.parameterize.presence || "coach"
+    # 英数字の URL 文字列を作る。日本語名のみでも role 別の採番で補完する
+    fallback = coach? ? "coach" : "member"
+    base = name.to_s.parameterize.presence || fallback
     candidate = base
     sequence = 1
 
