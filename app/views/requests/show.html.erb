@@ -15,8 +15,10 @@
     <article class="request-show__post">
       <div class="request-show__meta">
         <div class="request-show__identity">
-          <%= render "shared/user_avatar_icon", variant: :header %>
-          <span class="request-show__author"><%= @request.user.name %></span>
+          <%= link_to profile_path_for(@request.user), class: "request-show__avatar-link", aria: { label: "#{@request.user.name}のプロフィールへ移動" } do %>
+            <%= render "shared/user_avatar_icon", variant: :header %>
+          <% end %>
+          <span class="request-show__author"><%= link_to @request.user.name, profile_path_for(@request.user) %></span>
         </div>
         <span class="request-show__dot">・</span>
         <time class="request-show__date" datetime="<%= @request.created_at.iso8601 %>">
@@ -52,8 +54,10 @@
       <% if @request.advice.present? %>
         <h2 id="advice-heading" class="request-show__advice-heading">アドバイス</h2>
         <div class="request-show__advice-meta">
-          <%= render "shared/user_avatar_icon", variant: :header %>
-          <span class="request-show__advice-author"><%= @request.advice.user.name %></span>
+          <%= link_to profile_path_for(@request.advice.user), class: "request-show__avatar-link", aria: { label: "#{@request.advice.user.name}のプロフィールへ移動" } do %>
+            <%= render "shared/user_avatar_icon", variant: :header %>
+          <% end %>
+          <span class="request-show__advice-author"><%= link_to @request.advice.user.name, profile_path_for(@request.advice.user) %></span>
         </div>
         <div class="request-show__advice-body">
           <%= simple_format(@request.advice.body) %>

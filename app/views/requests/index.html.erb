@@ -12,11 +12,23 @@
   </header>
 
   <% if current_user.member? %>
+    <% unless current_user.member_profile_completed? %>
+      <div class="profile-reminder">
+        <p class="profile-reminder__text">プロフィールを設定すると、コーチがあなたの状況を理解しやすくなります。</p>
+        <%= link_to "プロフィールを設定する", edit_member_path(current_user), class: "menu-btn menu-btn--primary" %>
+      </div>
+    <% end %>
     <div class="requests-actions">
       <%= link_to "新規リクエストを作成する", new_request_path, class: "menu-btn menu-btn--primary" %>
     </div>
   <% end %>
   <% if current_user.coach? %>
+    <% unless current_user.coach_profile_completed? %>
+      <div class="profile-reminder">
+        <p class="profile-reminder__text">プロフィールを設定すると、メンバーがあなたの指導スタイルを把握しやすくなります。</p>
+        <%= link_to "プロフィールを設定する", edit_coach_path(current_user), class: "menu-btn menu-btn--primary" %>
+      </div>
+    <% end %>
     <div class="requests-actions">
       <%= link_to "すべて", requests_path,
             class: "menu-btn #{params[:filter] == "advised_by_me" ? "menu-btn--ghost" : "menu-btn--primary"}" %>
@@ -29,10 +41,12 @@
     <div class="requests-list">
       <% @requests.order(created_at: :desc).each do |request| %>
         <article class="request-card">
-          <%= render "shared/user_avatar_icon", variant: :card %>
+          <%= link_to profile_path_for(request.user), class: "request-card__avatar-link", aria: { label: "#{request.user.name}のプロフィールへ移動" } do %>
+            <%= render "shared/user_avatar_icon", variant: :card %>
+          <% end %>
           <div class="request-card__body">
             <div class="request-card__header">
-              <span class="request-card__name"><%= request.user.name %></span>
+              <span class="request-card__name"><%= link_to request.user.name, profile_path_for(request.user) %></span>
               <span class="request-card__dot">・</span>
               <span class="request-card__date">
                 <%= request.created_at.strftime("%Y/%m/%d %H:%M") %>
