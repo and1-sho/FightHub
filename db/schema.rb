@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_26_110000) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_27_113100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -46,6 +46,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_26_110000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "edited", default: false, null: false
+    t.boolean "accepts_paid_advice", default: false, null: false
+    t.boolean "paid_text_menu_enabled", default: false, null: false
+    t.boolean "paid_text_video_menu_enabled", default: false, null: false
     t.index ["request_id", "user_id"], name: "index_advices_on_request_id_and_user_id", unique: true
     t.index ["user_id"], name: "index_advices_on_user_id"
   end
@@ -62,6 +65,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_26_110000) do
     t.index ["user_id", "created_at"], name: "index_notifications_on_user_id_and_created_at"
     t.index ["user_id", "read_at"], name: "index_notifications_on_user_id_and_read_at"
     t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
+  create_table "paid_advice_requests", force: :cascade do |t|
+    t.integer "advice_id", null: false
+    t.integer "request_id", null: false
+    t.integer "member_id", null: false
+    t.integer "trainer_id", null: false
+    t.string "menu_code", null: false
+    t.integer "amount_jpy", null: false
+    t.string "status", default: "checkout_started", null: false
+    t.string "stripe_checkout_session_id"
+    t.string "stripe_payment_intent_id"
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["advice_id"], name: "index_paid_advice_requests_on_advice_id"
+    t.index ["member_id"], name: "index_paid_advice_requests_on_member_id"
+    t.index ["request_id"], name: "index_paid_advice_requests_on_request_id"
+    t.index ["stripe_checkout_session_id"], name: "index_paid_advice_requests_on_stripe_checkout_session_id", unique: true
+    t.index ["trainer_id"], name: "index_paid_advice_requests_on_trainer_id"
   end
 
   create_table "requests", force: :cascade do |t|
@@ -114,7 +137,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_26_110000) do
   add_foreign_key "advices", "users"
   add_foreign_key "notifications", "requests"
   add_foreign_key "notifications", "users"
+  add_foreign_key "paid_advice_requests", "advices"
+  add_foreign_key "paid_advice_requests", "requests"
+  add_foreign_key "paid_advice_requests", "users", column: "member_id"
+  add_foreign_key "paid_advice_requests", "users", column: "trainer_id"
   add_foreign_key "requests", "users"
-  add_foreign_key "requests", "users", column: "directed_to_trainer_id"
   add_foreign_key "requests", "users", column: "directed_to_trainer_id"
 end

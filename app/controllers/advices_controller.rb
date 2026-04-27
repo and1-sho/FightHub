@@ -26,6 +26,7 @@ class AdvicesController < ApplicationController
   def create
     @advice = @request.advices.build(advice_params)
     @advice.user = current_user
+    apply_paid_offer_settings!(@advice)
     draft_token = params[:advice_polish_draft_token].to_s
 
     if @advice.save
@@ -127,7 +128,26 @@ class AdvicesController < ApplicationController
   end
 
   def advice_params
-    params.require(:advice).permit(:body, :video)
+    params.require(:advice).permit(
+      :body,
+      :video,
+      :accepts_paid_advice,
+      :paid_text_menu_enabled,
+      :paid_text_video_menu_enabled
+    )
+  end
+
+  def apply_paid_offer_settings!(advice)
+    return unless Advice.column_names.include?("accepts_paid_advice")
+
+    enabled = params[:paid_offer_toggle].to_s == "on"
+    advice.accepts_paid_advice = enabled
+    advice.paid_text_menu_enabled = enabled && truthy_param?(params.dig(:advice, :paid_text_menu_enabled))
+    advice.paid_text_video_menu_enabled = enabled && truthy_param?(params.dig(:advice, :paid_text_video_menu_enabled))
+  end
+
+  def truthy_param?(value)
+    ActiveModel::Type::Boolean.new.cast(value)
   end
 
   def authorize_advice_polish!

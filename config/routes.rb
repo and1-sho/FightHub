@@ -20,7 +20,11 @@ Rails.application.routes.draw do
         post :polish
       end
     end
+    post "advices/:advice_id/paid_advice_requests", to: "paid_advice_requests#create", as: :advice_paid_advice_requests
   end
+
+  get "paid_advice_requests/success", to: "paid_advice_requests#success", as: :paid_advice_requests_success
+  get "paid_advice_requests/cancel", to: "paid_advice_requests#cancel", as: :paid_advice_requests_cancel
 
   resources :notifications, only: [:index]
 

@@ -1783,6 +1783,82 @@ input[type="reset"]:disabled {
   padding-top: 20px;
 }
 
+.request-show__paid-advice {
+  margin-top: 14px;
+}
+
+.request-show__paid-advice-button {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.request-show__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(2, 27, 21, 0.5);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.request-show__modal-backdrop[hidden] {
+  display: none !important;
+}
+
+.request-show__modal {
+  width: min(100%, 420px);
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 16px;
+}
+
+.request-show__modal-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #021b15;
+}
+
+.request-show__modal-subtitle {
+  margin: 0 0 10px;
+  color: rgba(2, 27, 21, 0.75);
+  font-size: 0.86rem;
+}
+
+.request-show__paid-advice-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.request-show__paid-advice-menu-list {
+  display: grid;
+  gap: 8px;
+}
+
+.request-show__paid-advice-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #021b15;
+  margin-bottom: 8px;
+}
+
+.request-show__modal-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .request-show__advice-meta {
   margin: 0 0 12px;
   display: flex;
