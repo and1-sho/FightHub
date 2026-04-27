@@ -72,6 +72,8 @@ class User < ApplicationRecord
   has_many :directed_requests, class_name: "Request", foreign_key: :directed_to_trainer_id, inverse_of: :directed_to_trainer
   # トレーナーは複数のアドバイスを持つ
   has_many :advices
+  has_many :paid_advice_requests_as_member, class_name: "PaidAdviceRequest", foreign_key: :member_id, dependent: :destroy
+  has_many :paid_advice_requests_as_trainer, class_name: "PaidAdviceRequest", foreign_key: :trainer_id, dependent: :destroy
   # 自分宛の通知
   has_many :notifications, dependent: :destroy
 

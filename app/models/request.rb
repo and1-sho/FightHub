@@ -17,6 +17,7 @@ class Request < ApplicationRecord
   belongs_to :directed_to_trainer, class_name: "User", optional: true
   # requestは複数のadviceを持つ（リクエスト削除時はアドバイスも消す）
   has_many :advices, dependent: :destroy
+  has_many :paid_advice_requests, dependent: :destroy
   # このリクエストに紐づく通知（リクエスト削除時は通知も消す）
   has_many :notifications, dependent: :destroy
 
