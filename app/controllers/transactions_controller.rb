@@ -17,26 +17,35 @@ class TransactionsController < ApplicationController
   end
 
   def show
+    @transaction_delivery_polish_draft_token = "transaction-delivery-#{@paid_advice_request.id}-trainer-#{current_user.id}"
+    @remaining_transaction_delivery_polish_attempts = AdvicesController::POLISH_MAX_ATTEMPTS
   end
 
   def deliver
-    unless @paid_advice_request.in_progress?
+    unless @paid_advice_request.awaiting_trainer_delivery?
       return redirect_to transaction_path(@paid_advice_request), alert: "この取引はすでに納品済み、または完了しています"
+    end
+
+    if [PaidAdviceRequest::STATUS_CHECKOUT_STARTED, PaidAdviceRequest::STATUS_PAID_LEGACY].include?(@paid_advice_request.status) && @paid_advice_request.paid_at.present?
+      @paid_advice_request.update_column(:status, PaidAdviceRequest::STATUS_IN_PROGRESS)
     end
 
     delivery_body = params[:delivery_body].to_s.strip
     delivery_video = params[:delivery_video]
+    video_provided = delivery_video.present?
 
     if delivery_body.blank?
-      return redirect_to transaction_path(@paid_advice_request), alert: "納品テキストを入力してください"
+      return redirect_to transaction_path(@paid_advice_request), alert: "詳しいアドバイスのテキストを入力してください"
     end
 
-    if @paid_advice_request.requires_video_delivery? && delivery_video.blank?
-      return redirect_to transaction_path(@paid_advice_request), alert: "このメニューは動画の納品が必須です"
+    if @paid_advice_request.requires_video_delivery? && !video_provided
+      return redirect_to transaction_path(@paid_advice_request), alert: "【テキスト＋動画】のメニューです。動画も投稿してください。"
     end
 
     @paid_advice_request.transaction do
-      @paid_advice_request.delivery_video.attach(delivery_video) if delivery_video.present?
+      if @paid_advice_request.requires_video_delivery?
+        @paid_advice_request.delivery_video.attach(delivery_video)
+      end
       @paid_advice_request.update!(
         delivery_body: delivery_body,
         status: PaidAdviceRequest::STATUS_DELIVERED,

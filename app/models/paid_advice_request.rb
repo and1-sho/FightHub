@@ -2,6 +2,7 @@ class PaidAdviceRequest < ApplicationRecord
   MENU_TEXT_ONLY = Advice::TEXT_ONLY_MENU
   MENU_TEXT_WITH_VIDEO = Advice::TEXT_WITH_VIDEO_MENU
   STATUS_CHECKOUT_STARTED = "checkout_started".freeze
+  STATUS_PAID_LEGACY = "paid".freeze
   STATUS_IN_PROGRESS = "in_progress".freeze
   STATUS_DELIVERED = "delivered".freeze
   STATUS_COMPLETED = "completed".freeze
@@ -18,7 +19,7 @@ class PaidAdviceRequest < ApplicationRecord
   validates :stripe_checkout_session_id, uniqueness: true, allow_blank: true
   validates :status, presence: true
   validates :status, inclusion: {
-    in: [STATUS_CHECKOUT_STARTED, STATUS_IN_PROGRESS, STATUS_DELIVERED, STATUS_COMPLETED]
+    in: [STATUS_CHECKOUT_STARTED, STATUS_PAID_LEGACY, STATUS_IN_PROGRESS, STATUS_DELIVERED, STATUS_COMPLETED]
   }
   validates :delivery_body, length: { maximum: 3000 }, allow_blank: true
 
@@ -51,13 +52,37 @@ class PaidAdviceRequest < ApplicationRecord
     end
   end
 
+  def approval_notice_message(viewer:)
+    if viewer.id == member_id
+      case menu_code
+      when MENU_TEXT_WITH_VIDEO then "【テキスト＋動画】の追加アドバイスを承認しました。"
+      when MENU_TEXT_ONLY then "【テキストのみ】の追加アドバイスを承認しました。"
+      else "追加アドバイスを承認しました。"
+      end
+    else
+      case menu_code
+      when MENU_TEXT_WITH_VIDEO then "【テキスト＋動画】の追加アドバイスが承認されました。"
+      when MENU_TEXT_ONLY then "【テキストのみ】の追加アドバイスが承認されました。"
+      else "追加アドバイスが承認されました。"
+      end
+    end
+  end
+
   # 決済確定時刻（未設定のレコード向けに作成日時で代用）
   def payment_confirmed_at
     paid_at.presence || created_at
   end
 
   def in_progress?
-    status == STATUS_IN_PROGRESS
+    status == STATUS_IN_PROGRESS || status == STATUS_PAID_LEGACY
+  end
+
+  # トレーナーが納品フォームを出していい状態（決済済みで未納品・未完了）
+  def awaiting_trainer_delivery?
+    return false if delivered? || completed?
+    return true if in_progress?
+    # 決済完了後にステータス更新が遅れた・取りこぼした場合の救済
+    paid_at.present? && status == STATUS_CHECKOUT_STARTED
   end
 
   def delivered?
@@ -72,9 +97,18 @@ class PaidAdviceRequest < ApplicationRecord
     menu_code == MENU_TEXT_WITH_VIDEO
   end
 
+  # 取引詳細のトレーナー向け納品フォーム用
+  def delivery_form_hint_for_trainer
+    if requires_video_delivery?
+      "【テキスト＋動画】の購入です。テキストと動画の両方が必須です。"
+    else
+      "【テキストのみ】の購入です。詳しいアドバイスのテキストを入力してください（動画は不要です）。"
+    end
+  end
+
   def status_label
     case status
-    when STATUS_CHECKOUT_STARTED, STATUS_IN_PROGRESS then "対応中"
+    when STATUS_CHECKOUT_STARTED, STATUS_PAID_LEGACY, STATUS_IN_PROGRESS then "対応中"
     when STATUS_DELIVERED then "納品済み"
     when STATUS_COMPLETED then "完了"
     else "対応中"

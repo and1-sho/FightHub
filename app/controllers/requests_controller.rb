@@ -56,6 +56,12 @@ class RequestsController < ApplicationController
       @inline_advice_polish_draft_token = params[:advice_polish_draft_token].presence || "advice-new-request-#{@request.id}-user-#{current_user.id}"
       @remaining_inline_advice_polish_attempts = remaining_advice_polish_attempts_for_show(@inline_advice_polish_draft_token)
     end
+
+    if current_user.trainer?
+      @my_advice_offer = @request.advices
+                                 .includes(:paid_advice_requests)
+                                 .find_by(user_id: current_user.id)
+    end
   end
 
   def new

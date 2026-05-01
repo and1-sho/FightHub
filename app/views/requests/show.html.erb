@@ -218,7 +218,7 @@
               </div>
               <% if current_user.member? && @request.user_id == current_user.id && advice.accepts_paid_advice_enabled? && advice.paid_menu_options.any? %>
                 <% existing_transaction = @request.paid_advice_requests.where(member_id: current_user.id).where.not(status: PaidAdviceRequest::STATUS_CHECKOUT_STARTED).order(created_at: :desc).first %>
-                <% if existing_transaction.present? %>
+                <% if existing_transaction.present? && !existing_transaction.completed? %>
                   <div class="request-show__paid-advice">
                     <%= link_to "取引を確認する（#{existing_transaction.status_label}）", transaction_path(existing_transaction), class: "request-show__paid-advice-button" %>
                   </div>
@@ -436,7 +436,11 @@
             </div>
             <div class="requests-feed-aside-spacer" aria-hidden="true"></div>
           </div>
-          <%= render "shared/requests_feed_aside" %>
+          <% if current_user.trainer? %>
+            <%= render "shared/requests_feed_aside", my_advice_offer: @my_advice_offer %>
+          <% else %>
+            <%= render "shared/requests_feed_aside" %>
+          <% end %>
         </div>
       </div>
     <% end %>

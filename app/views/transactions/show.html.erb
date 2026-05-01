@@ -111,8 +111,9 @@
 
                 <hr class="request-show__split" />
 
-                <section class="request-show__advice" aria-label="納品内容">
-                  <article class="request-show__advice-item">
+                <% paid_trainer = @paid_advice_request.trainer %>
+                <section class="request-show__advice" aria-label="購入通知">
+                  <article class="request-show__advice-item transaction-purchase-notice">
                     <div class="request-show__advice-meta">
                       <div class="request-show__identity-line">
                         <span class="request-show__avatar-link" aria-hidden="true">
@@ -129,44 +130,103 @@
                     <div class="request-show__advice-body">
                       <p><%= @paid_advice_request.purchase_notice_message %></p>
                     </div>
-
-                    <% if @paid_advice_request.delivery_body.present? %>
-                      <div class="request-show__advice-body">
-                        <%= simple_format(@paid_advice_request.delivery_body) %>
-                      </div>
-                    <% end %>
-
-                    <% if @paid_advice_request.delivery_video.attached? %>
-                      <div class="request-show__video-wrap request-show__video-wrap--advice">
-                        <%= render "shared/video_aspect", url: url_for(@paid_advice_request.delivery_video), wrapper_class: "video-aspect--request-show" %>
-                      </div>
-                    <% end %>
-
-                    <% unless @paid_advice_request.delivery_body.present? || @paid_advice_request.delivery_video.attached? %>
-                      <hr class="request-show__split" />
-                      <p class="request-show__advice-empty">まだアドバイスは届いていません。</p>
-                    <% end %>
                   </article>
+                </section>
 
-                  <% if current_user.id == @paid_advice_request.trainer_id && @paid_advice_request.in_progress? %>
-                    <div class="request-show__advice-editor">
-                      <%= form_with url: deliver_transaction_path(@paid_advice_request), method: :patch, local: true, html: { class: "request-show__advice-editor-form", multipart: true } do |f| %>
-                        <%= text_area_tag :delivery_body, nil, rows: 4, class: "request-show__advice-editor-body", placeholder: "詳しいアドバイスを入力してください" %>
-                        <div class="request-show__advice-editor-actions request-show__advice-editor-actions--with-tools">
-                          <div class="request-show__advice-editor-tools">
-                            <%= f.file_field :delivery_video, accept: "video/mp4,video/quicktime,.mp4,.mov", class: "request-show__inline-file-input", id: "transaction_delivery_video_input" %>
-                            <label class="request-show__inline-media advice-editor__media-icon" for="transaction_delivery_video_input" aria-label="動画をアップロード">
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
-                              </svg>
-                            </label>
-                          </div>
-                          <div class="request-show__advice-editor-submit-actions">
-                            <%= f.submit "納品する", class: "request-show__inline-submit" %>
-                          </div>
+                <hr class="request-show__split" />
+
+                <section class="request-show__advice" aria-label="納品内容">
+                  <% if @paid_advice_request.delivery_body.present? || @paid_advice_request.delivery_video.attached? %>
+                    <article class="request-show__advice-item transaction-delivered-item">
+                      <div class="request-show__advice-meta">
+                        <div class="request-show__identity-line">
+                          <%= link_to profile_path_for(paid_trainer), class: "request-show__avatar-link", aria: { label: "#{paid_trainer.name}のプロフィールへ移動" } do %>
+                            <%= render "shared/user_avatar_icon", variant: :card %>
+                          <% end %>
+                          <span class="request-show__author"><%= link_to paid_trainer.name, profile_path_for(paid_trainer) %></span>
+                          <span class="request-show__dot">·</span>
+                          <% delivered_ts = @paid_advice_request.delivered_at.presence || @paid_advice_request.updated_at %>
+                          <time class="request-show__date" datetime="<%= delivered_ts.iso8601 %>" title="<%= social_time_title(delivered_ts) %>">
+                            <%= social_time_ago(delivered_ts) %>
+                          </time>
+                        </div>
+                      </div>
+                      <p class="transaction-deliver-post__badge">詳しいアドバイス（納品）</p>
+                      <% if @paid_advice_request.delivery_body.present? %>
+                        <div class="request-show__advice-body">
+                          <%= simple_format(@paid_advice_request.delivery_body) %>
                         </div>
                       <% end %>
-                    </div>
+                      <% if @paid_advice_request.delivery_video.attached? %>
+                        <div class="request-show__video-wrap request-show__video-wrap--advice">
+                          <%= render "shared/video_aspect", url: url_for(@paid_advice_request.delivery_video), wrapper_class: "video-aspect--request-show" %>
+                        </div>
+                      <% end %>
+                    </article>
+                  <% end %>
+
+                  <% if current_user.trainer? && current_user.id == @paid_advice_request.trainer_id && @paid_advice_request.awaiting_trainer_delivery? %>
+                    <article class="request-show__advice-item transaction-deliver-post">
+                      <div class="request-show__advice-meta">
+                        <div class="request-show__identity-line">
+                          <%= link_to profile_path_for(paid_trainer), class: "request-show__avatar-link", aria: { label: "#{paid_trainer.name}のプロフィールへ移動" } do %>
+                            <%= render "shared/user_avatar_icon", variant: :card %>
+                          <% end %>
+                          <span class="request-show__author"><%= link_to paid_trainer.name, profile_path_for(paid_trainer) %></span>
+                          <span class="request-show__dot">·</span>
+                          <span class="request-show__date">納品を作成</span>
+                        </div>
+                      </div>
+                      <p class="transaction-deliver-post__lead"><%= @paid_advice_request.delivery_form_hint_for_trainer %></p>
+                      <div class="request-show__advice-editor">
+                        <%= form_with url: deliver_transaction_path(@paid_advice_request), method: :patch, local: true, html: { class: "request-show__advice-editor-form", multipart: true }, data: {
+                          controller: "request-polish transaction-delivery-form",
+                          "request-polish-endpoint-value": polish_request_advices_path(@paid_advice_request.request),
+                          "request-polish-max-attempts-value": 2,
+                          "request-polish-remaining-attempts-value": @remaining_transaction_delivery_polish_attempts || 2,
+                          "request-polish-draft-token-value": @transaction_delivery_polish_draft_token,
+                          "request-polish-min-body-length-value": 8,
+                          "request-polish-body-only-value": true
+                        } do |f| %>
+                          <%= text_area_tag :delivery_body, nil, rows: 4, class: "request-show__advice-editor-body", placeholder: "詳しいアドバイスを入力してください", required: true, data: { "request-polish-target": "body", action: "input->request-polish#onBodyInput" } %>
+                          <% if @paid_advice_request.requires_video_delivery? %>
+                            <div class="request-show__inline-video-preview" data-transaction-delivery-form-target="preview" hidden>
+                              <video class="request-show__inline-video-preview-media" data-transaction-delivery-form-target="previewVideo" data-action="loadedmetadata->transaction-delivery-form#captureDuration" playsinline muted preload="metadata"></video>
+                              <span class="request-show__inline-video-duration" data-transaction-delivery-form-target="duration"></span>
+                            </div>
+                          <% end %>
+                          <p class="request-compose__polish-error" data-request-polish-target="error" hidden></p>
+                          <div class="request-compose__proposal request-compose__proposal--modern" data-request-polish-target="proposal" hidden>
+                            <p class="request-compose__proposal-label">AIからの提案</p>
+                            <p class="request-compose__proposal-body" data-request-polish-target="proposalBody"></p>
+                            <div class="request-compose__proposal-actions">
+                              <button type="button" class="menu-btn menu-btn--primary" data-action="request-polish#adopt">提案を反映する</button>
+                            </div>
+                          </div>
+                          <div class="request-show__advice-editor-actions request-show__advice-editor-actions--with-tools">
+                            <% if @paid_advice_request.requires_video_delivery? %>
+                              <div class="request-show__advice-editor-tools">
+                                <%= f.file_field :delivery_video, accept: "video/mp4,video/quicktime,.mp4,.mov", class: "request-show__inline-file-input", id: "transaction_delivery_video_input", data: { transaction_delivery_form_target: "videoInput", action: "change->transaction-delivery-form#onVideoChange" } %>
+                                <label class="request-show__inline-media advice-editor__media-icon" for="transaction_delivery_video_input" aria-label="動画をアップロード">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                  </svg>
+                                </label>
+                              </div>
+                            <% end %>
+                            <div class="request-show__advice-editor-submit-actions">
+                              <button type="button" class="request-show__advice-editor-polish" data-request-polish-target="polishButton" data-action="request-polish#polish" disabled>文章を整える</button>
+                              <%= f.submit "納品する", class: "request-show__inline-submit" %>
+                            </div>
+                          </div>
+                        <% end %>
+                      </div>
+                    </article>
+                  <% end %>
+
+                  <% no_delivery_yet = @paid_advice_request.delivery_body.blank? && !@paid_advice_request.delivery_video.attached? %>
+                  <% if no_delivery_yet && current_user.id == @paid_advice_request.member_id %>
+                    <p class="request-show__advice-empty">まだアドバイスは届いていません。</p>
                   <% end %>
 
                   <% if current_user.id == @paid_advice_request.member_id && @paid_advice_request.delivered? %>
@@ -175,6 +235,37 @@
                     </div>
                   <% end %>
                 </section>
+
+                <% if @paid_advice_request.completed? %>
+                  <hr class="request-show__split" />
+
+                  <section class="request-show__advice" aria-label="承認通知">
+                    <article class="request-show__advice-item">
+                      <div class="request-show__advice-meta">
+                        <div class="request-show__identity-line">
+                          <span class="request-show__avatar-link" aria-hidden="true">
+                            <%= render "shared/user_avatar_icon", variant: :card %>
+                          </span>
+                          <span class="request-show__author">Re:RANGE</span>
+                          <span class="request-show__dot">·</span>
+                          <% completed_ts = @paid_advice_request.completed_at.presence || @paid_advice_request.updated_at %>
+                          <time class="request-show__date" datetime="<%= completed_ts.iso8601 %>" title="<%= social_time_title(completed_ts) %>">
+                            <%= social_time_ago(completed_ts) %>
+                          </time>
+                        </div>
+                      </div>
+                      <div class="request-show__advice-body">
+                        <p><%= @paid_advice_request.approval_notice_message(viewer: current_user) %></p>
+                      </div>
+                    </article>
+                  </section>
+
+                  <hr class="request-show__split" />
+
+                  <div class="transaction-closed">
+                    <p class="transaction-closed__text">クローズしました</p>
+                  </div>
+                <% end %>
               </main>
             </div>
             <div class="requests-feed-aside-spacer" aria-hidden="true"></div>
